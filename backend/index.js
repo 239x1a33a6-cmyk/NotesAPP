@@ -11,26 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 8002;
 
 // ─── CORS Configuration ───────────────────────────────────────────────────────
-// Build allowed origins list from env + known hardcoded production URLs.
-// Add your verified Vercel/Render URLs here or set FRONTEND_URL in .env.
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://frontend-ten-gamma-10.vercel.app",
-  process.env.FRONTEND_URL, // optional override via env
-].filter(Boolean);
-
+// origin: "*" is safe here because auth uses JWT in Authorization header,
+// NOT cookies. Wildcard CORS + credentials:true is what's forbidden, but
+// we don't use credentials:true.
 const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow server-to-server requests (no origin header) and listed origins
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.warn(`CORS blocked origin: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  // No credentials: true needed — we use Authorization header, not cookies
+  origin: "*",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "Accept"],
   optionsSuccessStatus: 200,
