@@ -1,0 +1,22 @@
+{
+  "name": "07_notesapibackend",
+  "version": "1.0.0",
+  "description": "This is a Notes API ",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Jinde Arun Kumar",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parse": "^0.4.0",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.0",
+    "nodemon": "^3.1.14"
+  }
+}
