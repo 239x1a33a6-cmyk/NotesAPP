@@ -16,7 +16,8 @@ const PORT = process.env.PORT || 8002;
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
-  process.env.FRONTEND_URL,
+  "https://frontend-ten-gamma-10.vercel.app",
+  process.env.FRONTEND_URL, // optional override via env
 ].filter(Boolean);
 
 const corsOptions = {
