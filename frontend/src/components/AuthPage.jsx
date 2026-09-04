@@ -49,8 +49,8 @@ export default function AuthPage({ onLoginSuccess, showNotification, theme, onTo
       if (response.ok) {
         showNotification(data.message || "Success!", "success");
         if (authMode === "login") {
-          localStorage.setItem("aura_user", JSON.stringify(data.user));
-          onLoginSuccess(data.user);
+          // Pass token + user to App — App stores them in localStorage
+          onLoginSuccess({ user: data.user, token: data.token });
           setAuthMode(null);
         } else {
           setAuthMode("login");
