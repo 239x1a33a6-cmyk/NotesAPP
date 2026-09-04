@@ -15,6 +15,7 @@ import {
   Sun,
   Moon
 } from "lucide-react";
+import { API_ENDPOINTS, apiFetch } from "../api";
 
 export default function AuthPage({ onLoginSuccess, showNotification, theme, onToggleTheme }) {
   const [authMode, setAuthMode] = useState(null); // 'login', 'signup', or null
@@ -34,15 +35,12 @@ export default function AuthPage({ onLoginSuccess, showNotification, theme, onTo
     }
 
     setLoading(true);
-    const endpoint = authMode === "login" ? "/user/login" : "/user/register";
+    const endpoint = authMode === "login" ? API_ENDPOINTS.login : API_ENDPOINTS.register;
     const payload = authMode === "login" ? { email, password } : { name, email, password };
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await apiFetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(payload),
       });
 

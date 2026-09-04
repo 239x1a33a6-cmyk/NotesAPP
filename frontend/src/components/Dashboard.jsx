@@ -7,6 +7,7 @@ import NoteModal from "./NoteModal";
 import CollaborateModal from "./CollaborateModal";
 import ExploreCard from "./ExploreCard";
 import RequestsInbox from "./RequestsInbox";
+import { API_ENDPOINTS, apiFetch } from "../api";
 
 export default function Dashboard({ user, showNotification, onLogout, theme, onToggleTheme }) {
   const [notes, setNotes] = useState([]);
@@ -21,8 +22,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
   // ─── Data Fetching ─────────────────────────────────────────────
   const fetchNotes = useCallback(async () => {
     try {
-      const endpoint = currentView === "trash" ? "/notes/trash" : "/notes";
-      const res = await fetch(endpoint, { headers: { Accept: "application/json" } });
+      const endpoint = currentView === "trash" ? API_ENDPOINTS.getTrashNotes : API_ENDPOINTS.getNotes;
+      const res = await apiFetch(endpoint, { headers: { Accept: "application/json" } });
       if (res.status === 401) { showNotification("Session expired. Please login again.", "error"); onLogout(); return; }
       const data = await res.json();
       if (res.ok) setNotes(data.notes || data.note || []);
@@ -34,7 +35,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const fetchDiscoverNotes = useCallback(async () => {
     try {
-      const res = await fetch("/notes/discover", { headers: { Accept: "application/json" } });
+      const res = await apiFetch(API_ENDPOINTS.discoverNotes, { headers: { Accept: "application/json" } });
       const data = await res.json();
       if (res.ok) setDiscoverNotes(data.notes || []);
     } catch { /* silent */ }
@@ -42,7 +43,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const fetchMyRequests = useCallback(async () => {
     try {
-      const res = await fetch("/notes/my-requests", { headers: { Accept: "application/json" } });
+      const res = await apiFetch(API_ENDPOINTS.myRequests, { headers: { Accept: "application/json" } });
       const data = await res.json();
       if (res.ok) setPendingRequests(data.requests || []);
     } catch { /* silent */ }
@@ -70,9 +71,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
   // ─── Note CRUD ─────────────────────────────────────────────────
   const handleNoteCreate = async (noteData) => {
     try {
-      const res = await fetch("/notes", {
+      const res = await apiFetch(API_ENDPOINTS.createNote, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(noteData),
       });
       const data = await res.json();
@@ -83,9 +83,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleNoteUpdate = async (noteId, updatedData) => {
     try {
-      const res = await fetch(`/notes/${noteId}`, {
+      const res = await apiFetch(API_ENDPOINTS.getNoteById(noteId), {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
@@ -96,7 +95,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handlePinToggle = async (noteId) => {
     try {
-      const res = await fetch(`/notes/${noteId}/pin`, { method: "PATCH" });
+      const res = await apiFetch(API_ENDPOINTS.pinNote(noteId), { method: "PATCH" });
       if (res.ok) fetchNotes();
       else showNotification("Failed to pin/unpin", "error");
     } catch { showNotification("Network error", "error"); }
@@ -104,7 +103,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleArchiveToggle = async (noteId) => {
     try {
-      const res = await fetch(`/notes/${noteId}/archive`, { method: "PATCH" });
+      const res = await apiFetch(API_ENDPOINTS.archiveNote(noteId), { method: "PATCH" });
       if (res.ok) { showNotification("Done", "success"); fetchNotes(); }
       else showNotification("Failed", "error");
     } catch { showNotification("Network error", "error"); }
@@ -112,7 +111,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleDeleteToggle = async (noteId) => {
     try {
-      const res = await fetch(`/notes/${noteId}`, { method: "DELETE" });
+      const res = await apiFetch(API_ENDPOINTS.deleteNote(noteId), { method: "DELETE" });
       if (res.ok) { showNotification("Moved to Trash", "success"); fetchNotes(); }
       else showNotification("Failed", "error");
     } catch { showNotification("Network error", "error"); }
@@ -120,7 +119,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleRestoreNote = async (noteId) => {
     try {
-      const res = await fetch(`/notes/${noteId}/restore`, { method: "PATCH" });
+      const res = await apiFetch(API_ENDPOINTS.restoreNote(noteId), { method: "PATCH" });
       if (res.ok) { showNotification("Note restored", "success"); fetchNotes(); }
       else showNotification("Failed to restore", "error");
     } catch { showNotification("Network error", "error"); }
@@ -129,9 +128,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
   // ─── Collaborators & Comments ───────────────────────────────────
   const handleAddCollaborator = async (noteId, collabData) => {
     try {
-      const res = await fetch(`/notes/${noteId}/collaborators`, {
+      const res = await apiFetch(API_ENDPOINTS.addCollaborator(noteId), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(collabData),
       });
       const data = await res.json();
@@ -146,7 +144,7 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleRemoveCollaborator = async (noteId, email) => {
     try {
-      const res = await fetch(`/notes/${noteId}/collaborators/${encodeURIComponent(email)}`, { method: "DELETE" });
+      const res = await apiFetch(API_ENDPOINTS.removeCollaborator(noteId, email), { method: "DELETE" });
       const data = await res.json();
       if (res.ok) {
         showNotification("Removed", "success");
@@ -159,9 +157,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleAddComment = async (noteId, commentData) => {
     try {
-      const res = await fetch(`/notes/${noteId}/comments`, {
+      const res = await apiFetch(API_ENDPOINTS.addComment(noteId), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(commentData),
       });
       const data = await res.json();
@@ -177,9 +174,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
   // ─── Request Access ─────────────────────────────────────────────
   const handleRequestAccess = async (noteId, message) => {
     try {
-      const res = await fetch(`/notes/${noteId}/request-access`, {
+      const res = await apiFetch(API_ENDPOINTS.requestAccess(noteId), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message }),
       });
       const data = await res.json();
@@ -193,9 +189,8 @@ export default function Dashboard({ user, showNotification, onLogout, theme, onT
 
   const handleRespondToRequest = async (noteId, requestId, action) => {
     try {
-      const res = await fetch(`/notes/${noteId}/requests/${requestId}`, {
+      const res = await apiFetch(API_ENDPOINTS.respondToRequest(noteId, requestId), {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action }),
       });
       const data = await res.json();
